@@ -1,4 +1,5 @@
 import os, glob, io
+from collections import namedtuple
 from lxml import etree
 
 nsmap = {
@@ -10,13 +11,20 @@ def xp(tree, path):
     return match[0] if match else ''
 
 
+Join = namedtuple('Join',
+                  ('ntype shape id ts x y w h text layer autosized'
+                   ' fill strokewidth strokecolor strokestyle textcolor'
+                   ' font id1 id2 p0x p0y p1x p1y ctrlcount arrowstate'
+                   ' c0x c0y c1x c1y').split( ))
+
+
 def walk(tree, indent):
     """
     walk the tree recursively, extracting node data
     """
     children = tree.xpath('child')
     for child in children:
-        yield [indent] +\
+        yield indent, Join(*
             [xp(child, path) for path in [
                 '@xsi:type',
                 'shape/@xsi:type',
@@ -46,7 +54,7 @@ def walk(tree, indent):
                 'ctrlPoint0/@x',
                 'ctrlPoint0/@y',
                 'ctrlPoint1/@x',
-                'ctrlPoint1/@y' ]]
+                'ctrlPoint1/@y' ]])
         for item in walk(child, indent+1): yield item
 
 
@@ -60,8 +68,7 @@ for filename in sorted(glob.glob('*.vue')):
     vue = etree.parse(io.BytesIO(bytes(data, 'ascii')))
 
     print('##', filename, '#' * (60-len(filename)))
-    for item in walk(vue, 0):
-        indent, *values = item
+    for indent, values in walk(vue, 0):
         print(indent * '> ',
               '; '.join(values), sep='')
 
