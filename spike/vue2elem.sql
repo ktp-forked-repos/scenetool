@@ -20,22 +20,22 @@ create temp table kvdict ( k text unique not null, v id );
 
 
 -- trigger to create the common elem record
-create trigger add_vue_data before insert on vue2elem
+create temp trigger add_vue_data before insert on vue2elem
   begin
     -- create an elem record with the common fields
     insert into elem (scene, style, label, ts, x, y, z)
     values (
-      new.fid as scene,
+      new.fid, -- scene
       (select rowid from style
        where fg = new.textcolor
 	 and bg = new.fill
          and sc = new.strokecolor
          and sw = new.strokewidth
          and font=(select rowid from font where font=new.font)
-       ) as style,
-       new.label, new.ts, new.x, new.y,
+       ), -- style
+       new.text, new.ts, new.x, new.y,
        -- for the z-ordering, just assign numbers in sequence:
-       (select max(z)+1 from elem where scene=new.fid) as z
+       (select max(z)+1 from elem where scene=new.fid) -- z
     );
 
     -- remember the rowid of the elem record we just made:
@@ -44,23 +44,24 @@ create trigger add_vue_data before insert on vue2elem
   end;
 
 -- trigger to populate detail table for links/edges
-create trigger add_vue_link after insert on vue2elem
+create temp trigger add_vue_link after insert on vue2elem
   when
     new.ntype = 'link'
   begin
-    insert into edge (eid, x0, y0, x1, y1)
-    values ((select v from kvdict where k='last_elem') as eid,
-    	    new.x0, new.y0, new.x1, new.y1,
-	    new.cx0, new.cy0, new.cx0, new.cy0);
+    insert into edge (eid, x0, y0, x1, y1, cpc, cx0, cy0, cx1, cy1)
+    values ((select v from kvdict where k='last_elem'), -- eid
+            new.p0x, new.p0y, new.p1x, new.p1y,
+	    new.ctrlcount,
+	    new.c0x, new.c0y, new.c1x, new.c1y);
   end;
 
 -- trigger to populate detail table for nodes
-create trigger add_vue_node after insert on vue2elem
+create temp trigger add_vue_node after insert on vue2elem
   when
     new.ntype = 'node'
   begin
     insert into node (eid, sid, w, h)
-    values ((select v from kvdict where k='last_elem') as eid,
+    values ((select v from kvdict where k='last_elem'), -- eid
             (select rowid from shape where shape=new.shape),
 	    new.w, new.h);
   end;
