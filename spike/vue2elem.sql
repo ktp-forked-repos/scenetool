@@ -16,7 +16,7 @@ from vuedata;
 create temp table vue2elem as select * from vuedata where 0=1;
 
 -- temp table to store variables since sqlite doesn't have them
-create temp table kvdict ( k text unique not null, v id );
+create temp table kvdict ( k text unique not null, v int );
 
 
 -- trigger to create the common elem record
