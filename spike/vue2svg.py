@@ -28,7 +28,7 @@ def xp(tree, path):
     match = tree.xpath(path, namespaces=nsmap)
     return match[0] if match else ''
 
-Join = namedtuple('Join',
+VueData = namedtuple('VueData',
                   ('parent ntype shape id ts x y w h text layer autosized'
                    ' fill strokewidth strokecolor strokestyle textcolor'
                    ' font id1 id2 p0x p0y p1x p1y ctrlcount arrowstate'
@@ -40,7 +40,7 @@ def walk(tree, parent=0):
     """
     children = tree.xpath('child')
     for child in children:
-        row = Join(*([parent] +
+        row = VueData(*([parent] +
             [xp(child, path) for path in [
                 '@xsi:type',
                 'shape/@xsi:type',
@@ -91,7 +91,7 @@ def load(dbc, filename):
 
     for row in walk(vue, 0):
         sql = 'insert into shape values (? %s)' \
-            % (', ? ' * len(Join._fields))
+            % (', ? ' * len(VueData._fields))
         cur.execute(sql, [fid] + list(row))
 
 def main(filenames):
@@ -100,7 +100,7 @@ def main(filenames):
     cur.execute('create table if not exists file (filename string)')
 
     sql = 'create table if not exists shape (fid integer, %s)' % \
-        ', '.join('%s data' % col for col in Join._fields)
+        ', '.join('%s data' % col for col in VueData._fields)
     cur.execute(sql)
 
     for filename in filenames:
