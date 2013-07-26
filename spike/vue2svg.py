@@ -1,7 +1,21 @@
-import os, glob, io
+"""
+vue2svg : spike/prototype for scenetool.
+generates an svg scene from VUE files specified on command line.
+
+usage:
+
+ python3.2 vue2svg.py ../test/vue/*.vue
+
+
+https://github.com/tangentstorm/scenetool
+copyright (c) 2013 michal j wallace.
+available to the public under the MIT/x11 license. (see ../LICENSE)
+"""
+import os, sys, io
 from collections import namedtuple
-from lxml import etree
 import sqlite3
+
+from lxml import etree
 
 
 DB_PATH = ":memory:"
@@ -80,7 +94,7 @@ def load(dbc, filename):
             % (', ? ' * len(Join._fields))
         cur.execute(sql, [fid] + list(row))
 
-def main():
+def main(filenames):
     dbc = sqlite3.connect(DB_PATH, isolation_level=None) # autocommit
     cur = dbc.cursor()
     cur.execute('create table if not exists file (filename string)')
@@ -89,7 +103,7 @@ def main():
         ', '.join('%s data' % col for col in Join._fields)
     cur.execute(sql)
 
-    for filename in sorted(glob.glob('*.vue')):
+    for filename in filenames:
         load(dbc,filename)
 
     cur.execute("select * from file, shape where file.rowid = shape.fid")
@@ -103,4 +117,5 @@ def main():
 
 
 if __name__=="__main__":
-    main()
+    if len(sys.argv) > 1: main(sys.argv[1:])
+    else: print(__doc__)
