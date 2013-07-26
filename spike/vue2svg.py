@@ -19,6 +19,7 @@ def walk(tree, sep, indent):
         print('> ' * indent +
               sep.join(xp(child, path) for path in [
                     '@ID',
+                    '@created',
                     '@xsi:type',
                     'shape/@xsi:type',
                     '@x',
@@ -38,6 +39,11 @@ def walk(tree, sep, indent):
                     'point1/@y',
                     'point2/@x',
                     'point2/@y',
+                    '@controlCount',
+                    'ctrlPoint0/@x',
+                    'ctrlPoint0/@y',
+                    'ctrlPoint1/@x',
+                    'ctrlPoint1/@y',
                     ]))
         walk(child, sep, indent+1)
 
