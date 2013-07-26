@@ -10,45 +10,44 @@ def xp(tree, path):
     return match[0] if match else ''
 
 
-def walk(tree, sep, indent):
+def walk(tree, indent):
     """
     walk the tree recursively, extracting node data
     """
     children = tree.xpath('child')
     for child in children:
-        print('> ' * indent +
-              sep.join(xp(child, path) for path in [
-                    '@xsi:type',
-                    'shape/@xsi:type',
-                    '@ID',
-                    '@created',
-                    '@x',
-                    '@y',
-                    '@width',
-                    '@height',
-                    '@label',
-                    '@layerID',
-                    '@autoSized',
-                    'fillColor/text()',
-                    'strokeWidth/text()',
-                    'strokeColor/text()',
-                    'strokeStyle/text()',
-                    'textColor/text()',
-                    'font/text()',
-                    'ID1/text()',
-                    'ID2/text()',
-                    'point1/@x',
-                    'point1/@y',
-                    'point2/@x',
-                    'point2/@y',
-                    '@controlCount',
-                    '@arrowState',
-                    'ctrlPoint0/@x',
-                    'ctrlPoint0/@y',
-                    'ctrlPoint1/@x',
-                    'ctrlPoint1/@y',
-                    ]))
-        walk(child, sep, indent+1)
+        yield [indent] +\
+            [xp(child, path) for path in [
+                '@xsi:type',
+                'shape/@xsi:type',
+                '@ID',
+                '@created',
+                '@x',
+                '@y',
+                '@width',
+                '@height',
+                '@label',
+                '@layerID',
+                '@autoSized',
+                'fillColor/text()',
+                'strokeWidth/text()',
+                'strokeColor/text()',
+                'strokeStyle/text()',
+                'textColor/text()',
+                'font/text()',
+                'ID1/text()',
+                'ID2/text()',
+                'point1/@x',
+                'point1/@y',
+                'point2/@x',
+                'point2/@y',
+                '@controlCount',
+                '@arrowState',
+                'ctrlPoint0/@x',
+                'ctrlPoint0/@y',
+                'ctrlPoint1/@x',
+                'ctrlPoint1/@y' ]]
+        for item in walk(child, indent+1): yield item
 
 
 for filename in sorted(glob.glob('*.vue')):
@@ -61,5 +60,8 @@ for filename in sorted(glob.glob('*.vue')):
     vue = etree.parse(io.BytesIO(bytes(data, 'ascii')))
 
     print('##', filename, '#' * (60-len(filename)))
-    walk(vue, '; ', 0)
+    for item in walk(vue, 0):
+        indent, *values = item
+        print(indent * '> ',
+              '; '.join(values), sep='')
 
