@@ -18,7 +18,7 @@ import sqlite3
 from lxml import etree
 
 
-DB_PATH = ":memory:"
+DB_PATH = "vuedata.sdb"
 
 nsmap = {
     'xsi':"http://www.w3.org/2001/XMLSchema-instance"
@@ -90,7 +90,7 @@ def load(dbc, filename):
     fid = cur.lastrowid
 
     for row in walk(vue, 0):
-        sql = 'insert into shape values (? %s)' \
+        sql = 'insert into vuedata values (? %s)' \
             % (', ? ' * len(VueData._fields))
         cur.execute(sql, [fid] + list(row))
 
@@ -99,14 +99,15 @@ def main(filenames):
     cur = dbc.cursor()
     cur.execute('create table if not exists file (filename string)')
 
-    sql = 'create table if not exists shape (fid integer, %s)' % \
+    sql = 'create table if not exists vuedata (fid integer, %s)' % \
         ', '.join('%s data' % col for col in VueData._fields)
     cur.execute(sql)
 
     for filename in filenames:
         load(dbc,filename)
 
-    cur.execute("select * from file, shape where file.rowid = shape.fid")
+    cur.execute("select * from file, vuedata "
+                "where file.rowid = vuedata.fid")
     lastfile = None
     for row in cur.fetchall():
         filename = row[0] # from the file table
