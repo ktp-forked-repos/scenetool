@@ -48,7 +48,7 @@ create table edge (
   x1 real,
   y1 real,
   -- (0..2) control points (for bezier curves)
-  ctrl_count int,
+  cpc int,  -- control point count
   cx0 real,
   cy0 real,
   cx1 real,
