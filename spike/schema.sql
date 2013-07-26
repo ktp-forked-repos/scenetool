@@ -6,22 +6,23 @@ create table scene (
 );
 
 create table font (
-  name text
+  font text
 );
 
 create table style (
   name text,
-  created timestamp,
-  fg int,  -- fg color (text)
-  bg int,  -- bg color (text)
-  eg int,  -- edge (stroke) color
+  fg int,  -- text color
+  bg int,  -- fill color
+  sc int,  -- stroke color
+  sw int,  -- stroke width
   font int references font,
-  font_size int
+  size int
 );
 
 create table elem (
   scene int references scene,
   style int references style,
+  ts timestamp,
   x  real,
   y  real,
   z  int,  -- z-order (sequence)
@@ -42,6 +43,8 @@ create table node (
 create table edge (
   eid int references elem,
   -- 2 end points
+  x0 real,
+  y0 real,
   x1 real,
   y1 real,
   -- (0..2) control points (for bezier curves)
