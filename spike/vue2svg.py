@@ -17,7 +17,6 @@ import sqlite3
 
 from lxml import etree
 
-
 DB_PATH = "vuedata.sdb" # note: will be wiped out on each run!
 
 nsmap = {
@@ -123,14 +122,64 @@ def main(filenames):
     dbc = connect()
     cur = dbc.cursor()
 
-    cur.execute("select * from file, vuedata "
-                "where file.rowid = vuedata.fid "
-                "order by file.rowid")
-    lastfile = None
+    def fetch_ntups(cur):
+        cols = [tup[0] for tup in cur.description]
+        ntup = namedtuple('row', cols)
+        for row in cur.fetchall():
+            yield ntup(*row)
+
+    def fetch_dicts(cur):
+        cols = [tup[0] for tup in cur.description]
+        for row in cur.fetchall():
+            yield dict(zip(cols, row))
+
+    print('<!doctype html>')
+    print('<html><head><title>vue2svg</title>')
+    print('<style type="text/css">')
+    cur.execute(
+        """
+        SELECT s.rowid AS id, fg, bg, sc, sw, f.font
+        FROM style s LEFT JOIN font f ON s.font = f.rowid
+        """)
+    for row in fetch_dicts(cur):
+        print(' '.join(
+          """
+          svg .style-{id} text {{
+            fill: {fg};
+          }}
+          svg .style-{id} {{
+            stroke: {sc};
+            stroke-width: {sw};
+            fill: {bg};
+          }}
+          """.format(**row).split()))
+    print('</style>')
+    print('</head>')
+
+    cur.execute("select * from scenes")
+    cols = [tup[0] for tup in cur.description]
+    ntup = namedtuple('rec', cols)
+
+    templates = {
+        'node':
+            '<rect x="{x}" y="{y}" class="style-{style}" '
+                 ' width="{w}" height="{h}" />',
+        'edge':
+            '<line x1="{x0}" y1="{y0}" class="style-{style}"'
+                 ' x2="{x1}" y2="{y1}" />',
+    }
+
+    print('<body>')
     for filename, rows in it.groupby(cur.fetchall(), lambda r: r[0]):
-        print('##', filename, '#' * (60-len(filename)))
+        print(' <h1>%s</h1>' % filename)
+        print(' <svg>')
         for row in rows:
-            print(';'.join(map(str,row[1:])))
+            rec = ntup(*row)
+            print('  ',templates.get(rec.tag, rec.tag or '')
+                  .format(**rec.__dict__))
+        print(' </svg>')
+    print('</body>')
+    print('</html>')
 
 if __name__=="__main__":
     if len(sys.argv) > 1: main(sys.argv[1:])
