@@ -11,7 +11,7 @@ https://github.com/tangentstorm/scenetool
 copyright (c) 2013 michal j wallace.
 available to the public under the MIT/x11 license. (see ../LICENSE)
 """
-import os, sys, io
+import os, sys, io, itertools as it
 from collections import namedtuple
 import sqlite3
 
@@ -122,14 +122,13 @@ def main(filenames):
     cur = dbc.cursor()
 
     cur.execute("select * from file, vuedata "
-                "where file.rowid = vuedata.fid")
+                "where file.rowid = vuedata.fid "
+                "order by file.rowid")
     lastfile = None
-    for row in cur.fetchall():
-        filename = row[0] # from the file table
-        if filename != lastfile:
-            print('##', filename, '#' * (60-len(filename)))
-        print(';'.join(map(str,row[1:])))
-        lastfile = filename
+    for filename, rows in it.groupby(cur.fetchall(), lambda r: r[0]):
+        print('##', filename, '#' * (60-len(filename)))
+        for row in rows:
+            print(';'.join(map(str,row[1:])))
 
 if __name__=="__main__":
     if len(sys.argv) > 1: main(sys.argv[1:])
