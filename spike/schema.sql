@@ -55,6 +55,6 @@ create table edge (
   cy1 real
 );
 
-insert into shape values ( 'rect' );
+insert into shape values ( 'rectangle' );
 insert into shape values ( 'rounded' );
 insert into shape values ( 'ellipse' );
