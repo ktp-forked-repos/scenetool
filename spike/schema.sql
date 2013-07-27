@@ -9,6 +9,10 @@ create table font (
   font text
 );
 
+create table lmtag (
+  tag text
+);
+
 create table style (
   name text,
   fg int,  -- text color
@@ -22,6 +26,7 @@ create table style (
 create table elem (
   scene int references scene,
   style int references style,
+  lmtag int references lmtag,
   ts timestamp,
   x  real,
   y  real,
@@ -58,3 +63,7 @@ create table edge (
 insert into shape values ( 'rectangle' );
 insert into shape values ( 'rounded' );
 insert into shape values ( 'ellipse' );
+
+insert into lmtag values ( 'node' );
+insert into lmtag values ( 'edge' );
+insert into lmtag values ( 'group' );

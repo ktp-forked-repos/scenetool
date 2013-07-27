@@ -18,12 +18,17 @@ create temp table vue2elem as select * from vuedata where 0=1;
 -- temp table to store variables since sqlite doesn't have them
 create temp table kvdict ( k text unique not null, v int );
 
+create temp table convert_ntype ( vuent text, lmtag int );
+insert into convert_ntype
+      select 'link', rowid from lmtag where tag='edge'
+union select 'node', rowid from lmtag where tag='node'
+union select 'group',rowid from lmtag where tag='group';
 
 -- trigger to create the common elem record
 create temp trigger add_vue_data before insert on vue2elem
   begin
     -- create an elem record with the common fields
-    insert into elem (scene, style, label, ts, x, y, z)
+    insert into elem (scene, style, lmtag, label, ts, x, y, z)
     values (
       new.fid, -- scene
       (select rowid from style
@@ -33,6 +38,7 @@ create temp trigger add_vue_data before insert on vue2elem
          and sw = new.strokewidth
          and font=(select rowid from font where font=new.font)
        ), -- style
+       (select lmtag from convert_ntype where vuent=new.ntype),
        new.text, new.ts, new.x, new.y,
        -- for the z-ordering, just assign numbers in sequence:
        (select max(z)+1 from elem where scene=new.fid) -- z
