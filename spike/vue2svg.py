@@ -114,9 +114,11 @@ def main(filenames):
 
     dbc.close()
 
-    os.system("sqlite3 %s < schema.sql" % DB_PATH)
-    os.system("sqlite3 %s < vue2elem.sql" % DB_PATH)
-    os.system("sqlite3 %s < views.sql" % DB_PATH)
+    # run the scripts and check for error (non-zero exit code)
+    if ( os.system("sqlite3 %s < schema.sql" % DB_PATH)
+       + os.system("sqlite3 %s < vue2elem.sql" % DB_PATH)
+       + os.system("sqlite3 %s < views.sql" % DB_PATH)
+       ) > 0: sys.exit()
 
     dbc = connect()
     cur = dbc.cursor()
