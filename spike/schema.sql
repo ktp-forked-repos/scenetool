@@ -14,7 +14,7 @@ create table lmtag (
 );
 
 create table style (
-  name text,
+  stylename text,
   fg int,  -- text color
   bg int,  -- fill color
   sc int,  -- stroke color

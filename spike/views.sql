@@ -11,11 +11,12 @@ create view edges as
 
 create view scenes as
   select filename, lmtag.tag, lm.rowid as lmid, lm.*,
-         sh.shape, n.w, n.h,
-         e.x1, e.y1, e.cpc, e.cx0, e.cy0, e.cx1, e.cy1
+         sh.shape, st.stylename, n.w, n.h,
+         e.x0, e.y0, e.x1, e.y1, e.cpc, e.cx0, e.cy0, e.cx1, e.cy1
   from elem as lm
        left join lmtag on lm.lmtag = lmtag.rowid
        left join file on lm.scene = file.rowid
+       left join style st on lm.style = st.rowid
        left outer join edge as e on e.eid = lm.rowid
        left outer join node as n on n.eid = lm.rowid
        left outer join shape as sh on n.sid = sh.rowid
