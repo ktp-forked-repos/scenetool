@@ -18,7 +18,7 @@ import sqlite3
 from lxml import etree
 
 
-DB_PATH = "vuedata.sdb"
+DB_PATH = "vuedata.sdb" # note: will be wiped out on each run!
 
 nsmap = {
     'xsi':"http://www.w3.org/2001/XMLSchema-instance"
@@ -94,17 +94,32 @@ def load(dbc, filename):
             % (', ? ' * len(VueData._fields))
         cur.execute(sql, [fid] + list(row))
 
+
+def connect():
+    return sqlite3.connect(DB_PATH, isolation_level=None) # autocommit
+
 def main(filenames):
-    dbc = sqlite3.connect(DB_PATH, isolation_level=None) # autocommit
+
+    if os.path.exists(DB_PATH): os.unlink(DB_PATH)
+    dbc = connect()
     cur = dbc.cursor()
     cur.execute('create table if not exists file (filename string)')
 
-    sql = 'create table if not exists vuedata (fid integer, %s)' % \
-        ', '.join('%s data' % col for col in VueData._fields)
+    sql = 'create table if not exists vuedata (fid integer, %s)' \
+        % ', '.join('%s data' % col for col in VueData._fields)
     cur.execute(sql)
 
     for filename in filenames:
         load(dbc,filename)
+
+    dbc.close()
+
+    os.system("sqlite3 %s < schema.sql" % DB_PATH)
+    os.system("sqlite3 %s < vue2elem.sql" % DB_PATH)
+    os.system("sqlite3 %s < views.sql" % DB_PATH)
+
+    dbc = connect()
+    cur = dbc.cursor()
 
     cur.execute("select * from file, vuedata "
                 "where file.rowid = vuedata.fid")
@@ -115,7 +130,6 @@ def main(filenames):
             print('##', filename, '#' * (60-len(filename)))
         print(';'.join(map(str,row[1:])))
         lastfile = filename
-
 
 if __name__=="__main__":
     if len(sys.argv) > 1: main(sys.argv[1:])
